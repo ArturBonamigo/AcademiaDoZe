@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-x:Class="AcademiaDoZe.Presentation.AppMaui.Views.ColaboradorPage"
+x:Class="AcademiaDoZe.Presentation.AppMaui.Views.AlunoPage"
 xmlns:vm="clr-namespace:AcademiaDoZe.Presentation.AppMaui.ViewModels"
 xmlns:enums="clr-namespace:AcademiaDoZe.Application.Enums;assembly=AcademiaDoZe.Application"
 xmlns:converters="clr-namespace:AcademiaDoZe.Presentation.AppMaui.Converters"
-x:DataType="vm:ColaboradorViewModel"
+x:DataType="vm:AlunoViewModel"
 Title="{Binding Title}">
     <ContentPage.Resources>
         <converters:FotoToImageSourceConverter x:Key="FotoToImageSourceConverter" />
@@ -21,7 +21,7 @@ Title="{Binding Title}">
                 <StackLayout Spacing="5">
                     <Label Text="CPF"/>
                     <Grid ColumnDefinitions="*,Auto">
-                        <Entry Grid.Column="0" Text="{Binding Colaborador.Cpf}" Placeholder="000.000.000-00" Keyboard="Numeric" Margin="0,0,10,0"/>
+                        <Entry Grid.Column="0" Text="{Binding Aluno.Cpf}" Placeholder="000.000.000-00" Keyboard="Numeric" Margin="0,0,10,0"/>
                         <Button Grid.Column="1" Text="" Command="{Binding SearchByCpfCommand}" Style="{StaticResource ButtonPrimary}" HeightRequest="40" Padding="15,0">
                             <Button.ImageSource>
                                 <FontImageSource FontFamily="MaterialIcons" Glyph="&#xe8b6;" />
@@ -35,30 +35,30 @@ Title="{Binding Title}">
             <Border Style="{StaticResource CardBorder}" Margin="15,10">
 
                 <StackLayout Spacing="15">
-                    <Label Text="{Binding Colaborador.Id, StringFormat='Colaborador ID: {0}'}" Style="{StaticResource SubHeadline}"/>
+                    <Label Text="{Binding Aluno.Id, StringFormat='Aluno ID: {0}'}" Style="{StaticResource SubHeadline}"/>
                     <StackLayout Spacing="5">
                         <Label Text="Nome"/>
-                        <Entry Text="{Binding Colaborador.Nome}" Placeholder="Digite o nome..."/>
+                        <Entry Text="{Binding Aluno.Nome}" Placeholder="Digite o nome..."/>
                     </StackLayout>
                     <StackLayout Spacing="5">
                         <Label Text="Data de Nascimento"/>
-                        <DatePicker Date="{Binding Colaborador.DataNascimento, Converter={StaticResource DateOnlyConverter}, Mode=TwoWay}"/>
+                        <DatePicker Date="{Binding Aluno.DataNascimento, Converter={StaticResource DateOnlyConverter}, Mode=TwoWay}"/>
                     </StackLayout>
                     <StackLayout Spacing="5">
                         <Label Text="Telefone"/>
-                        <Entry Text="{Binding Colaborador.Telefone}" Placeholder="Digite o telefone..." Keyboard="Telephone"/>
+                        <Entry Text="{Binding Aluno.Telefone}" Placeholder="Digite o telefone..." Keyboard="Telephone"/>
                     </StackLayout>
                     <StackLayout Spacing="5">
                         <Label Text="Email"/>
-                        <Entry Text="{Binding Colaborador.Email}" Placeholder="Digite o email..." Keyboard="Email"/>
+                        <Entry Text="{Binding Aluno.Email}" Placeholder="Digite o email..." Keyboard="Email"/>
                     </StackLayout>
                     <StackLayout Spacing="5">
                         <Label Text="Senha"/>
-                        <Entry Text="{Binding Colaborador.Senha}" Placeholder="Senha" IsPassword="True"/>
+                        <Entry Text="{Binding Aluno.Senha}" Placeholder="Senha" IsPassword="True"/>
                     </StackLayout>
                     <StackLayout Spacing="5">
                         <Label Text="Foto"/>
-                        <Image Source="{Binding Colaborador.Foto, Converter={StaticResource FotoToImageSourceConverter}}" Aspect="AspectFill" HeightRequest="120" WidthRequest="120"/>
+                        <Image Source="{Binding Aluno.Foto, Converter={StaticResource FotoToImageSourceConverter}}" Aspect="AspectFill" HeightRequest="120" WidthRequest="120"/>
                         <Button Text="Selecionar Imagem" Command="{Binding SelecionarFotoCommand}" Style="{StaticResource ButtonPrimary}" >
                             <Button.ImageSource>
                                 <FontImageSource FontFamily="MaterialIcons" Glyph="&#xe226;" />
@@ -77,7 +77,7 @@ Title="{Binding Title}">
 
                     <Grid ColumnDefinitions="*,Auto">
 
-                        <Entry Grid.Column="0" Text="{Binding Colaborador.Endereco.Cep}" Placeholder="00000-000" Keyboard="Numeric" Margin="0,0,10,0"/>
+                        <Entry Grid.Column="0" Text="{Binding Aluno.Endereco.Cep}" Placeholder="00000-000" Keyboard="Numeric" Margin="0,0,10,0"/>
                         <Button Grid.Column="1" Text="" Command="{Binding SearchByCepCommand}" Style="{StaticResource ButtonPrimary}" HeightRequest="40" Padding="15,0">
                             <Button.ImageSource>
                                 <FontImageSource FontFamily="MaterialIcons" Glyph="&#xe8b6;" />
@@ -89,48 +89,20 @@ Title="{Binding Title}">
                     <Border Margin="0,10,0,0" Padding="10" BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray900}}">
 
                         <StackLayout>
-                            <Label Text="{Binding Colaborador.Endereco.Nome, StringFormat='Rua: {0}'}"/>
-                            <Label Text="{Binding Colaborador.Endereco.Bairro, StringFormat='Bairro: {0}'}"/>
-                            <Label Text="{Binding Colaborador.Endereco.Cidade, StringFormat='Cidade: {0}'}"/>
-                            <Label Text="{Binding Colaborador.Endereco.Estado, StringFormat='Estado: {0}'}"/>
-                            <Label Text="{Binding Colaborador.Endereco.Pais, StringFormat='País: {0}'}"/>
+                            <Label Text="{Binding Aluno.Endereco.Nome, StringFormat='Rua: {0}'}"/>
+                            <Label Text="{Binding Aluno.Endereco.Bairro, StringFormat='Bairro: {0}'}"/>
+                            <Label Text="{Binding Aluno.Endereco.Cidade, StringFormat='Cidade: {0}'}"/>
+                            <Label Text="{Binding Aluno.Endereco.Estado, StringFormat='Estado: {0}'}"/>
+                            <Label Text="{Binding Aluno.Endereco.Pais, StringFormat='País: {0}'}"/>
                         </StackLayout>
                     </Border>
                     <StackLayout Spacing="5">
                         <Label Text="Número"/>
-                        <Entry Text="{Binding Colaborador.Numero}" Placeholder="Número" IsReadOnly="False"/>
+                        <Entry Text="{Binding Aluno.Numero}" Placeholder="Número" IsReadOnly="False"/>
                     </StackLayout>
                     <StackLayout Spacing="5">
                         <Label Text="Complemento"/>
-                        <Entry Text="{Binding Colaborador.Complemento}" Placeholder="Complemento" IsReadOnly="False"/>
-                    </StackLayout>
-                </StackLayout>
-            </Border>
-            <!-- Dados de Trabalho -->
-
-            <Border Style="{StaticResource CardBorder}" Margin="15,10">
-
-                <StackLayout Spacing="15">
-                    <Label Text="Dados de Trabalho" Style="{StaticResource SubHeadline}"/>
-                    <StackLayout Spacing="5">
-                        <Label Text="Data de Admissão"/>
-                        <DatePicker Date="{Binding Colaborador.DataAdmissao, Converter={StaticResource DateOnlyConverter}, Mode=TwoWay}"/>
-                    </StackLayout>
-                    <StackLayout Spacing="5">
-                        <Label Text="Tipo"/>
-                        <Picker ItemsSource="{Binding ColaboradorTipos}" SelectedItem="{Binding Colaborador.Tipo}">
-                            <Picker.ItemDisplayBinding>
-                                <Binding Converter="{StaticResource EnumDisplay}" />
-                            </Picker.ItemDisplayBinding>
-                        </Picker>
-                    </StackLayout>
-                    <StackLayout Spacing="5">
-                        <Label Text="Vínculo"/>
-                        <Picker ItemsSource="{Binding ColaboradorVinculos}" SelectedItem="{Binding Colaborador.Vinculo}">
-                            <Picker.ItemDisplayBinding>
-                                <Binding Converter="{StaticResource EnumDisplay}" />
-                            </Picker.ItemDisplayBinding>
-                        </Picker>
+                        <Entry Text="{Binding Aluno.Complemento}" Placeholder="Complemento" IsReadOnly="False"/>
                     </StackLayout>
                 </StackLayout>
             </Border>
@@ -144,7 +116,7 @@ Title="{Binding Title}">
                     </Button.ImageSource>
                 </Button>
 
-                <Button Grid.Column="1" Text="Salvar" Command="{Binding SaveColaboradorCommand}" Style="{StaticResource ButtonPrimary}" HeightRequest="50">
+                <Button Grid.Column="1" Text="Salvar" Command="{Binding SaveAlunoCommand}" Style="{StaticResource ButtonPrimary}" HeightRequest="50">
 
                     <Button.ImageSource>
                         <FontImageSource FontFamily="MaterialIcons" Glyph="&#xe161;" />

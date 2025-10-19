@@ -3,107 +3,85 @@
 using AcademiaDoZe.Application.DTOs;
 using AcademiaDoZe.Application.Interfaces;
 using AcademiaDoZe.Application.Mappings;
-using AcademiaDoZe.Domain.Repositories;
 using AcademiaDoZe.Application.Security;
+using AcademiaDoZe.Domain.Repositories;
 
-namespace AcademiaDoZe.Application.Services
+namespace AcademiaDoZe.Application.Services;
+
+public class AlunoService : IAlunoService
 {
-    public class AlunoService : IAlunoService
+    private readonly Func<IAlunoRepository> _repoFactory;
+    public AlunoService(Func<IAlunoRepository> repoFactory)
     {
-        private readonly Func<IAlunoRepository> _repoFactory;
-        public AlunoService(Func<IAlunoRepository> repoFactory)
-        {
-            _repoFactory = repoFactory ?? throw new ArgumentNullException(nameof(repoFactory));
-        }
-        public async Task<AlunoDTO> ObterPorIdAsync(int id)
-        {
-            var aluno = await _repoFactory().ObterPorId(id);
-            return (aluno != null) ? aluno.ToDto() : null!;
-        }
-        public async Task<IEnumerable<AlunoDTO>> ObterTodosAsync()
-        {
-            var alunos = await _repoFactory().ObterTodos();
-            return [.. alunos.Select(c => c.ToDto())];
-        }
-        public async Task<AlunoDTO> AdicionarAsync(AlunoDTO alunoDto)
-        {
-            // Verifica se já existe um colaborador com o mesmo CPF
-            if (await _repoFactory().CpfJaExiste(alunoDto.Cpf))
+        _repoFactory = repoFactory ?? throw new ArgumentNullException(nameof(repoFactory));
+    }
+    public async Task<AlunoDTO> ObterPorIdAsync(int id)
+    {
+        var aluno = await _repoFactory().ObterPorId(id);
+        return (aluno != null) ? aluno.ToDto() : null!;
+    }
+    public async Task<IEnumerable<AlunoDTO>> ObterTodosAsync()
+    {
+        var alunos = await _repoFactory().ObterTodos();
+        return [.. alunos.Select(a => a.ToDto())];
+    }
+    public async Task<AlunoDTO> AdicionarAsync(AlunoDTO alunoDto)
+    {
+        if (await _repoFactory().CpfJaExiste(alunoDto.Cpf))
+            throw new InvalidOperationException($"Já existe um aluno cadastrado com o CPF {alunoDto.Cpf}");
 
-            {
-                throw new InvalidOperationException($"Já existe um aluno cadastrado com o CPF {alunoDto.Cpf}.");
-            }
-            // Hash da senha
+        if (!string.IsNullOrWhiteSpace(alunoDto.Senha))
+            alunoDto.Senha = PasswordHasher.Hash(alunoDto.Senha);
 
-            if (!string.IsNullOrWhiteSpace(alunoDto.Senha))
+        var aluno = alunoDto.ToEntity();
 
-            {
-                alunoDto.Senha = PasswordHasher.Hash(alunoDto.Senha);
-            }
-            // Cria a entidade de domínio a partir do DTO
-            var aluno = alunoDto.ToEntity();
-            // Salva no repositório
-            await _repoFactory().Adicionar(aluno);
-            // Retorna o DTO atualizado com o ID gerado
-            return aluno.ToDto();
-        }
-        public async Task<AlunoDTO> AtualizarAsync(AlunoDTO alunoDto)
-        {
-            // Verifica se o aluno existe
+        await _repoFactory().Adicionar(aluno);
 
-            var alunoExistente = await _repoFactory().ObterPorId(alunoDto.Id) ?? throw new KeyNotFoundException($"Aluno ID {alunoDto.Id} não encontrado.");
+        return aluno.ToDto();
+    }
+    public async Task<AlunoDTO> AtualizarAsync(AlunoDTO alunoDto)
+    {
+        var alunoExistente = await _repoFactory().ObterPorId(alunoDto.Id) ?? throw new KeyNotFoundException($"Aluno ID {alunoDto.Id} não encontrado.");
 
-            // Verifica se o novo CPF já está em uso por outro aluno
+        if (await _repoFactory().CpfJaExiste(alunoDto.Cpf, alunoDto.Id))
+            throw new InvalidOperationException($"Já existe outro aluno cadastrado com o CPF {alunoDto.Cpf}.");
 
-            if (await _repoFactory().CpfJaExiste(alunoDto.Cpf, alunoDto.Id))
+        if (!string.IsNullOrWhiteSpace(alunoDto.Senha))
+            alunoDto.Senha = PasswordHasher.Hash(alunoDto.Senha);
 
-            {
-                throw new InvalidOperationException($"Já existe outro aluno cadastrado com o CPF {alunoDto.Cpf}.");
-            }
-            // Se nova senha informada, aplicar hash
+        var alunoAtualizado = alunoExistente.UpdateFromDto(alunoDto);
 
-            if (!string.IsNullOrWhiteSpace(alunoDto.Senha))
+        await _repoFactory().Atualizar(alunoAtualizado);
+        return alunoAtualizado.ToDto();
+    }
+    public async Task<bool> RemoverAsync(int id)
+    {
+        var aluno = await _repoFactory().ObterPorId(id);
 
-            {
-                alunoDto.Senha = PasswordHasher.Hash(alunoDto.Senha);
-            }
-            // a partir dos dados do dto e do existente, cria uma nova instância com os valores atualizados
+        if (aluno == null)
+            return false;
+        await _repoFactory().Remover(id);
 
-            var alunoAtualizado = alunoExistente.UpdateFromDto(alunoDto);
-            // Atualiza no repositório
-            await _repoFactory().Atualizar(alunoAtualizado);
-            return alunoAtualizado.ToDto();
-        }
-        public async Task<bool> RemoverAsync(int id)
-        {
-            var aluno = await _repoFactory().ObterPorId(id);
+        return true;
+    }
+    public async Task<AlunoDTO> ObterPorCpfAsync(string cpf)
+    {
+        if (string.IsNullOrWhiteSpace(cpf))
+            throw new ArgumentException("CPF não pode ser vazio.", nameof(cpf));
+        cpf = new string([.. cpf.Where(char.IsDigit)]);
+        var aluno = await _repoFactory().ObterPorCpf(cpf);
+        return (aluno != null) ? aluno.ToDto() : null!;
+    }
+    public async Task<bool> CpfJaExisteAsync(string cpf, int? id = null)
+    {
+        return await _repoFactory().CpfJaExiste(cpf, id);
+    }
+    public async Task<bool> TrocarSenhaAsync(int id, string novaSenha)
+    {
+        if (string.IsNullOrWhiteSpace(novaSenha)) ;
+        throw new ArgumentException("Nova senha inválida.", nameof(novaSenha));
 
-            if (aluno == null)
-            {
-                return false;
-            }
-            await _repoFactory().Remover(id);
-
-            return true;
-        }
-        public async Task<AlunoDTO> ObterPorCpfAsync(string cpf)
-        {
-            if (string.IsNullOrWhiteSpace(cpf))
-                throw new ArgumentException("CPF não pode ser vazio.", nameof(cpf));
-            cpf = new string([.. cpf.Where(char.IsDigit)]);
-            var aluno = await _repoFactory().ObterPorCpf(cpf);
-            return (aluno != null) ? aluno.ToDto() : null!;
-        }
-        public async Task<bool> CpfJaExisteAsync(string cpf, int? id = null)
-        {
-            return await _repoFactory().CpfJaExiste(cpf, id);
-        }
-        public async Task<bool> TrocarSenhaAsync(int id, string novaSenha)
-        {
-            if (string.IsNullOrWhiteSpace(novaSenha))
-                throw new ArgumentException("Nova senha inválida.", nameof(novaSenha));
-            var hash = PasswordHasher.Hash(novaSenha);
-            return await _repoFactory().TrocarSenha(id, hash);
-        }
+        var hash = PasswordHasher.Hash(novaSenha);
+        return await _repoFactory().TrocarSenha(id, hash);
     }
 }

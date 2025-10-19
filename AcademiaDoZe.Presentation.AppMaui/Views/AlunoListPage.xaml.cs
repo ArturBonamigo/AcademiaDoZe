@@ -1,9 +1,9 @@
 using AcademiaDoZe.Application.DTOs;
 using AcademiaDoZe.Presentation.AppMaui.ViewModels;
 namespace AcademiaDoZe.Presentation.AppMaui.Views;
-public partial class ColaboradorListPage : ContentPage
+public partial class AlunoListPage : ContentPage
 {
-    public ColaboradorListPage(ColaboradorListViewModel viewModel)
+    public AlunoListPage(AlunoListViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;
@@ -11,37 +11,37 @@ public partial class ColaboradorListPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        if (BindingContext is ColaboradorListViewModel viewModel)
+        if (BindingContext is AlunoListViewModel viewModel)
         {
-            await viewModel.LoadColaboradoresCommand.ExecuteAsync(null);
+            await viewModel.LoadAlunosCommand.ExecuteAsync(null);
         }
     }
     private async void OnEditButtonClicked(object sender, EventArgs e)
     {
         try
         {
-            if (sender is Button button && button.BindingContext is ColaboradorDTO colaborador && BindingContext is ColaboradorListViewModel viewModel)
+            if (sender is Button button && button.BindingContext is AlunoDTO aluno && BindingContext is AlunoListViewModel viewModel)
             {
-                await viewModel.EditColaboradorCommand.ExecuteAsync(colaborador);
+                await viewModel.EditAlunoCommand.ExecuteAsync(aluno);
             }
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro", $"Erro ao editar colaborador: {ex.Message}", "OK");
+            await DisplayAlert("Erro", $"Erro ao editar aluno: {ex.Message}", "OK");
         }
     }
     private async void OnDeleteButtonClicked(object sender, EventArgs e)
     {
         try
         {
-            if (sender is Button button && button.BindingContext is ColaboradorDTO colaborador && BindingContext is ColaboradorListViewModel viewModel)
+            if (sender is Button button && button.BindingContext is AlunoDTO aluno && BindingContext is AlunoListViewModel viewModel)
             {
-                await viewModel.DeleteColaboradorCommand.ExecuteAsync(colaborador);
+                await viewModel.DeleteAlunoCommand.ExecuteAsync(aluno);
             }
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro", $"Erro ao excluir colaborador: {ex.Message}", "OK");
+            await DisplayAlert("Erro", $"Erro ao excluir aluno: {ex.Message}", "OK");
         }
     }
     private CancellationTokenSource? _searchCts;
@@ -55,9 +55,9 @@ public partial class ColaboradorListPage : ContentPage
             // espera curta (300ms)
             await Task.Delay(300, token);
             if (token.IsCancellationRequested) return;
-            if (BindingContext is ColaboradorListViewModel vm)
+            if (BindingContext is AlunoListViewModel vm)
             {
-                await vm.SearchColaboradoresCommand.ExecuteAsync(null);
+                await vm.SearchAlunosCommand.ExecuteAsync(null);
             }
         }
         catch (TaskCanceledException) { /* ignorar */ }

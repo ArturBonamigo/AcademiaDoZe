@@ -45,30 +45,30 @@ namespace AcademiaDoZe.Application.Services
             return logradouro.ToDto();
         }
         public async Task<LogradouroDTO> AtualizarAsync(LogradouroDTO logradouroDto)
-{
-    // Verifica se o logradouro existe
-    var logradouroExistente = await _repoFactory().ObterPorId(logradouroDto.Id) 
-        ?? throw new KeyNotFoundException($"Logradouro ID {logradouroDto.Id} não encontrado.");
-
-    // Verifica se o novo CEP já está em uso por outro logradouro
-    if (!string.Equals(logradouroExistente.Cep, logradouroDto.Cep, StringComparison.OrdinalIgnoreCase))
-    {
-        var cepExistente = await _repoFactory().ObterPorCep(logradouroDto.Cep);
-        if (cepExistente != null && cepExistente.Id != logradouroDto.Id)
         {
-            throw new InvalidOperationException($"Logradouro com ID {cepExistente.Id}, já cadastrado com o CEP {cepExistente.Cep}.");
+            // Verifica se o logradouro existe
+            var logradouroExistente = await _repoFactory().ObterPorId(logradouroDto.Id)
+                ?? throw new KeyNotFoundException($"Logradouro ID {logradouroDto.Id} não encontrado.");
+
+            // Verifica se o novo CEP já está em uso por outro logradouro
+            if (!string.Equals(logradouroExistente.Cep, logradouroDto.Cep, StringComparison.OrdinalIgnoreCase))
+            {
+                var cepExistente = await _repoFactory().ObterPorCep(logradouroDto.Cep);
+                if (cepExistente != null && cepExistente.Id != logradouroDto.Id)
+                {
+                    throw new InvalidOperationException($"Logradouro com ID {cepExistente.Id}, já cadastrado com o CEP {cepExistente.Cep}.");
+                }
+            }
+
+            // CORREÇÃO: Criar nova instância com os dados atualizados do DTO
+            var logradouroAtualizado = logradouroExistente.UpdateFromDto(logradouroDto);
+
+            // CORREÇÃO: Preservar o ID da entidade original
+            // Isso depende do seu repositório - normalmente o repositório sabe qual ID atualizar
+            await _repoFactory().Atualizar(logradouroAtualizado);
+
+            return logradouroAtualizado.ToDto();
         }
-    }
-
-    // CORREÇÃO: Criar nova instância com os dados atualizados do DTO
-    var logradouroAtualizado = logradouroExistente.UpdateFromDto(logradouroDto);
-
-    // CORREÇÃO: Preservar o ID da entidade original
-    // Isso depende do seu repositório - normalmente o repositório sabe qual ID atualizar
-    await _repoFactory().Atualizar(logradouroAtualizado);
-    
-    return logradouroAtualizado.ToDto();
-}
         public async Task<bool> RemoverAsync(int id)
         {
             var logradouro = await _repoFactory().ObterPorId(id);

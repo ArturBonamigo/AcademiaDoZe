@@ -2,56 +2,81 @@
 using AcademiaDoZe.Application.Enums;
 using AcademiaDoZe.Presentation.AppMaui.Message;
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Maui.Storage;
+using System;
+
 namespace AcademiaDoZe.Presentation.AppMaui.Configuration
 {
-    /* ConfigurationHelper - config inicial a partir das Preferences - recarga automática via Messenger */
+    /// <summary>
+    /// Responsável por configurar o acesso ao banco de dados de forma dinâmica com base nas Preferences.
+    /// </summary>
     public static class ConfigurationHelper
     {
         public static void ConfigureServices(IServiceCollection services)
         {
-            // lê as preferências do banco de dados
-
+            // Lê as preferências do banco de dados (ou aplica valores padrão)
             var (connectionString, databaseType) = ReadDbPreferences();
-            var repoConfig = new RepositoryConfig { ConnectionString = connectionString, DatabaseType = databaseType };
+
+            // Log para debug (opcional)
+            Console.WriteLine($"[CONFIG HELPER] ConnectionString inicial: {connectionString}");
+            Console.WriteLine($"[CONFIG HELPER] DatabaseType: {databaseType}");
+
+            // Cria e registra a configuração de repositório
+            var repoConfig = new RepositoryConfig
+            {
+                ConnectionString = connectionString,
+                DatabaseType = databaseType
+            };
 
             services.AddSingleton(repoConfig);
             services.AddApplicationServices();
-            // Assina a mensagem e aplica as mudanças automática
+
+            // 🔄 Escuta mudanças nas Preferences (ex: quando usuário muda dados no ConfigPage)
             WeakReferenceMessenger.Default.Register<RepositoryConfig, BancoPreferencesUpdatedMessage>(
-            // recipient é o RepositoryConfig singleton
-            recipient: repoConfig, handler: static (recipient, message) =>
-            {
-                // aplica as novas configurações
+                recipient: repoConfig,
+                handler: static (recipient, message) =>
+                {
+                    var (newConn, newType) = ReadDbPreferences();
+                    recipient.ConnectionString = newConn;
+                    recipient.DatabaseType = newType;
 
-                var (connectionString, databaseType) = ReadDbPreferences();
-
-                recipient.ConnectionString = connectionString;
-                recipient.DatabaseType = databaseType;
-            });
+                    Console.WriteLine($"[CONFIG HELPER] Preferences atualizadas:");
+                    Console.WriteLine($" → Nova ConnectionString: {newConn}");
+                    Console.WriteLine($" → Novo Tipo de Banco: {newType}");
+                });
         }
+
+        /// <summary>
+        /// Lê as preferências do banco e monta a ConnectionString. 
+        /// Caso algo falhe, aplica valores padrão seguros.
+        /// </summary>
         private static (string ConnectionString, EAppDatabaseType DatabaseType) ReadDbPreferences()
         {
-            // dados conexão
-
-            string dbServer = Preferences.Get("Servidor", "localhost"); // "172.24.32.1"
-            string dbDatabase = Preferences.Get("Banco", "db_academia_do_ze"); // "db_academia_do_ze"
-            string dbUser = Preferences.Get("Usuario", "sa"); // "sa"
-            string dbPassword = Preferences.Get("Senha", "$Tmlts&29"); // "abcBolinhas12345"
-            string dbComplemento = Preferences.Get("Complemento", "TrustServerCertificate=True;Encrypt=True;"); // "TrustServerCertificate=True;Encrypt=True;"
-                                                                       // Configurações de conexão
+            string dbServer = Preferences.Get("Servidor", "localhost");
+            string dbDatabase = Preferences.Get("Banco", "db_academia_do_ze");
+            string dbUser = Preferences.Get("Usuario", "sa");
+            string dbPassword = Preferences.Get("Senha", "$Tmlts&29");
+            string dbComplemento = Preferences.Get("Complemento", "TrustServerCertificate=True;Encrypt=True;");
 
             string connectionString = $"Server={dbServer};Database={dbDatabase};User Id={dbUser};Password={dbPassword};{dbComplemento}";
 
-            // obtém o tipo de banco de dados selecionado nas preferências
-
-            var dbType = Preferences.Get("DatabaseType", EAppDatabaseType.SqlServer.ToString()) switch
-
+            // 🧩 Verificação extra: fallback automático se vier vazia ou nula
+            if (string.IsNullOrWhiteSpace(connectionString) ||
+                string.IsNullOrWhiteSpace(dbServer) ||
+                string.IsNullOrWhiteSpace(dbDatabase))
             {
-                "SqlServer" => EAppDatabaseType.SqlServer,
+                connectionString = "Server=localhost;Database=db_academia_do_ze;User Id=sa;Password=$Tmlts&29;TrustServerCertificate=True;Encrypt=True;";
+                Console.WriteLine("[CONFIG HELPER] ⚠️ ConnectionString estava vazia — aplicando padrão local.");
+            }
+
+            // Determina o tipo de banco
+            var dbTypeStr = Preferences.Get("DatabaseType", EAppDatabaseType.SqlServer.ToString());
+            var dbType = dbTypeStr switch
+            {
                 "MySql" => EAppDatabaseType.MySql,
                 _ => EAppDatabaseType.SqlServer
-
             };
+
             return (connectionString, dbType);
         }
     }

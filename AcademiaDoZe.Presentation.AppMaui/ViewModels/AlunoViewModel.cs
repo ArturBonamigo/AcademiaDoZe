@@ -1,39 +1,41 @@
 ﻿using AcademiaDoZe.Application.DTOs;
 using AcademiaDoZe.Application.Enums;
 using AcademiaDoZe.Application.Interfaces;
+using AcademiaDoZe.Domain.Entities;
 using CommunityToolkit.Mvvm.Input;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace AcademiaDoZe.Presentation.AppMaui.ViewModels
 {
-    [QueryProperty(nameof(ColaboradorId), "Id")]
-    public partial class ColaboradorViewModel : BaseViewModel
+    [QueryProperty(nameof(AlunoId), "Id")]
+    public partial class AlunoViewModel : BaseViewModel
     {
-        public IEnumerable<EAppColaboradorTipo> ColaboradorTipos { get; } = Enum.GetValues(typeof(EAppColaboradorTipo)).Cast<EAppColaboradorTipo>();
-        public IEnumerable<EAppColaboradorVinculo> ColaboradorVinculos { get; } = Enum.GetValues(typeof(EAppColaboradorVinculo)).Cast<EAppColaboradorVinculo>();
-        private readonly IColaboradorService _colaboradorService;
+        private readonly IAlunoService _alunoService;
         private readonly ILogradouroService _logradouroService;
-        private ColaboradorDTO _colaborador = new()
+        private AlunoDTO _aluno = new()
         {
             Nome = string.Empty,
             Cpf = string.Empty,
             DataNascimento = DateOnly.FromDateTime(DateTime.Today.AddYears(-18)),
             Telefone = string.Empty,
             Endereco = new LogradouroDTO { Cep = string.Empty, Nome = string.Empty, Bairro = string.Empty, Cidade = string.Empty, Estado = string.Empty, Pais = string.Empty },
-            Numero = string.Empty,
-            DataAdmissao = DateOnly.FromDateTime(DateTime.Today),
-            Tipo = EAppColaboradorTipo.Administrador,
-            Vinculo = EAppColaboradorVinculo.CLT
+            Numero = string.Empty
+
         };
-        public ColaboradorDTO Colaborador
+        public AlunoDTO Aluno
         {
-            get => _colaborador;
-            set => SetProperty(ref _colaborador, value);
+            get => _aluno;
+            set => SetProperty(ref _aluno, value);
         }
-        private int _colaboradorId;
-        public int ColaboradorId
+        private int _alunoId;
+        public int AlunoId
         {
-            get => _colaboradorId;
-            set => SetProperty(ref _colaboradorId, value);
+            get => _alunoId;
+            set => SetProperty(ref _alunoId, value);
         }
         private bool _isEditMode;
         public bool IsEditMode
@@ -41,11 +43,11 @@ namespace AcademiaDoZe.Presentation.AppMaui.ViewModels
             get => _isEditMode;
             set => SetProperty(ref _isEditMode, value);
         }
-        public ColaboradorViewModel(IColaboradorService colaboradorService, ILogradouroService logradouroService)
+        public AlunoViewModel(IAlunoService alunoService, ILogradouroService logradouroService)
         {
-            _colaboradorService = colaboradorService;
+            _alunoService = alunoService;
             _logradouroService = logradouroService;
-            Title = "Detalhes do Colaborador";
+            Title = "Detalhes do Aluno";
         }
         /* métodos de comandos */
         [RelayCommand]
@@ -55,37 +57,37 @@ namespace AcademiaDoZe.Presentation.AppMaui.ViewModels
         }
         public async Task InitializeAsync()
         {
-            if (ColaboradorId > 0)
+            if (AlunoId > 0)
             {
                 IsEditMode = true;
-                Title = "Editar Colaborador";
-                await LoadColaboradorAsync();
+                Title = "Editar Aluno";
+                await LoadAlunoAsync();
             }
             else
             {
                 IsEditMode = false;
-                Title = "Novo Colaborador";
+                Title = "Novo Aluno";
             }
         }
         [RelayCommand]
-        public async Task LoadColaboradorAsync()
+        public async Task LoadAlunoAsync()
         {
-            if (ColaboradorId <= 0)
+            if (AlunoId <= 0)
                 return;
             try
             {
                 IsBusy = true;
-                var colaboradorData = await _colaboradorService.ObterPorIdAsync(ColaboradorId);
+                var alunoData = await _alunoService.ObterPorIdAsync(AlunoId);
 
-                if (colaboradorData != null)
+                if (alunoData != null)
 
                 {
-                    Colaborador = colaboradorData;
+                    Aluno = alunoData;
                 }
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Erro", $"Erro ao carregar colaborador: {ex.Message}", "OK");
+                await Shell.Current.DisplayAlert("Erro", $"Erro ao carregar aluno: {ex.Message}", "OK");
             }
             finally
             {
@@ -93,37 +95,37 @@ namespace AcademiaDoZe.Presentation.AppMaui.ViewModels
             }
         }
         [RelayCommand]
-        public async Task SaveColaboradorAsync()
+        public async Task SaveAlunoAsync()
         {
             if (IsBusy)
                 return;
-            if (!ValidateColaborador(Colaborador))
+            if (!ValidateAluno(Aluno))
                 return;
             try
             {
                 IsBusy = true;
                 // Verifica se o CEP existe antes de continuar
 
-                var logradouroData = await _logradouroService.ObterPorCepAsync(Colaborador.Endereco.Cep);
+                var logradouroData = await _logradouroService.ObterPorCepAsync(Aluno.Endereco.Cep);
                 if (logradouroData == null)
 
                 {
                     await Shell.Current.DisplayAlert("Erro", "O CEP informado não existe. O cadastro não pode continuar.", "OK");
                     return;
                 }
-                Colaborador.Endereco = logradouroData;
+                Aluno.Endereco = logradouroData;
                 if (IsEditMode)
                 {
-                    await _colaboradorService.AtualizarAsync(Colaborador);
+                    await _alunoService.AtualizarAsync(Aluno);
 
-                    await Shell.Current.DisplayAlert("Sucesso", "Colaborador atualizado com sucesso!", "OK");
+                    await Shell.Current.DisplayAlert("Sucesso", "Aluno atualizado com sucesso!", "OK");
 
                 }
                 else
                 {
-                    await _colaboradorService.AdicionarAsync(Colaborador);
+                    await _alunoService.AdicionarAsync(Aluno);
 
-                    await Shell.Current.DisplayAlert("Sucesso", "Colaborador criado com sucesso!", "OK");
+                    await Shell.Current.DisplayAlert("Sucesso", "Aluno criado com sucesso!", "OK");
 
                 }
                 await Shell.Current.GoToAsync("..");
@@ -140,77 +142,68 @@ namespace AcademiaDoZe.Presentation.AppMaui.ViewModels
         [RelayCommand]
         public async Task SearchByCpfAsync()
         {
-            if (string.IsNullOrWhiteSpace(Colaborador.Cpf))
+            if (string.IsNullOrWhiteSpace(Aluno.Cpf))
                 return;
             try
             {
                 IsBusy = true;
-                // normaliza para apenas dígitos
-                var cpfNormalized = new string(Colaborador.Cpf.Where(char.IsDigit).ToArray());
+                // normaliza para apenas dígitos (o repositório espera dígitos)
 
-                // Correção: ObterPorCpfAsync retorna apenas um ColaboradorDTO
-                var colaborador = await _colaboradorService.ObterPorCpfAsync(cpfNormalized);
+                var cpfNormalized = new string(Aluno.Cpf.Where(char.IsDigit).ToArray());
 
-                var resultados = colaborador != null
-                    ? new List<ColaboradorDTO> { colaborador }
-                    : new List<ColaboradorDTO>();
-
+                var resultado = await _alunoService.ObterPorCpfAsync(cpfNormalized);
+                var resultados = resultado != null ? new List<AlunoDTO> { resultado } : new List<AlunoDTO>();
                 if (!resultados.Any())
                 {
-                    await Shell.Current.DisplayAlert("Aviso", "CPF não encontrado.", "OK");
-                    return;
+                    await Shell.Current.DisplayAlert("Aviso", "CPF não encontrado.", "OK"); return;
                 }
-
                 if (resultados.Count == 1)
                 {
-                    Colaborador = resultados.First();
+                    Aluno = resultados.First();
                     IsEditMode = true;
-                    await Shell.Current.DisplayAlert("Aviso", "Colaborador já cadastrado! Dados carregados para edição.", "OK");
-                    return;
+                    await Shell.Current.DisplayAlert("Aviso", "Aluno já cadastrado! Dados carregados para edição.", "OK"); return;
                 }
+                // múltiplos resultados -> perguntar ao usuário qual selecionar
 
                 var options = resultados.Select(c => $"{c.Id} - {c.Nome} ({c.Cpf})").ToArray();
-                var escolha = await Shell.Current.DisplayActionSheet("Vários colaboradores encontrados", "Cancelar", null, options);
 
+                var escolha = await Shell.Current.DisplayActionSheet("Vários alunos encontrados", "Cancelar", null, options);
                 if (string.IsNullOrWhiteSpace(escolha) || escolha == "Cancelar")
                     return;
-
+                // extrai ID a partir da string selecionada ("{Id} - ...")
                 var idStr = escolha.Split('-', 2).FirstOrDefault()?.Trim();
                 if (int.TryParse(idStr, out var selId))
+
                 {
                     var selecionado = resultados.FirstOrDefault(c => c.Id == selId);
+
                     if (selecionado != null)
+
                     {
-                        Colaborador = selecionado;
+                        Aluno = selecionado;
                         IsEditMode = true;
-                        await Shell.Current.DisplayAlert("Aviso", "Colaborador selecionado: dados carregados para edição.", "OK");
+                        await Shell.Current.DisplayAlert("Aviso", "Aluno selecionado: dados carregados para edição.", "OK");
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                await Shell.Current.DisplayAlert("Erro", $"Erro ao buscar CPF: {ex.Message}", "OK");
-            }
-            finally
-            {
-                IsBusy = false;
-            }
+            catch (Exception ex) { await Shell.Current.DisplayAlert("Erro", $"Erro ao buscar CPF: {ex.Message}", "OK"); }
+            finally { IsBusy = false; }
         }
         [RelayCommand]
         public async Task SearchByCepAsync()
         {
-            if (string.IsNullOrWhiteSpace(Colaborador.Endereco.Cep))
+            if (string.IsNullOrWhiteSpace(Aluno.Endereco.Cep))
                 return;
             try
             {
                 IsBusy = true;
-                var logradouroData = await _logradouroService.ObterPorCepAsync(Colaborador.Endereco.Cep);
+                var logradouroData = await _logradouroService.ObterPorCepAsync(Aluno.Endereco.Cep);
 
                 if (logradouroData != null)
 
                 {
-                    Colaborador.Endereco = logradouroData;
-                    OnPropertyChanged(nameof(Colaborador));
+                    Aluno.Endereco = logradouroData;
+                    OnPropertyChanged(nameof(Aluno));
                     await Shell.Current.DisplayAlert("Aviso", "CEP encontrado! Endereço preenchido automaticamente.", "OK");
                 }
                 else
@@ -260,8 +253,8 @@ namespace AcademiaDoZe.Presentation.AppMaui.ViewModels
                     using var stream = await result.OpenReadAsync();
                     using var ms = new MemoryStream();
                     await stream.CopyToAsync(ms);
-                    Colaborador.Foto = new ArquivoDTO { Conteudo = ms.ToArray() };
-                    OnPropertyChanged(nameof(Colaborador));
+                    Aluno.Foto = new ArquivoDTO { Conteudo = ms.ToArray() };
+                    OnPropertyChanged(nameof(Aluno));
                 }
             }
             catch (Exception ex)
@@ -269,47 +262,41 @@ namespace AcademiaDoZe.Presentation.AppMaui.ViewModels
                 await Shell.Current.DisplayAlert("Erro", $"Erro ao selecionar imagem: {ex.Message}", "OK");
             }
         }
-        private static bool ValidateColaborador(ColaboradorDTO colaborador)
+        private static bool ValidateAluno(AlunoDTO aluno)
         {
             const string validationTitle = "Validação";
-            if (string.IsNullOrWhiteSpace(colaborador.Nome))
+            if (string.IsNullOrWhiteSpace(aluno.Nome))
             {
                 Shell.Current.DisplayAlert(validationTitle, "Nome é obrigatório.", "OK");
                 return false;
             }
-            if (string.IsNullOrWhiteSpace(colaborador.Cpf) || colaborador.Cpf.Length != 11)
+            if (string.IsNullOrWhiteSpace(aluno.Cpf) || aluno.Cpf.Length != 11)
             {
                 Shell.Current.DisplayAlert(validationTitle, "CPF deve ter 11 dígitos.", "OK");
                 return false;
             }
-            if (colaborador.DataNascimento == default)
+            if (aluno.DataNascimento == default)
             {
                 Shell.Current.DisplayAlert(validationTitle, "Data de nascimento é obrigatória.", "OK");
                 return false;
             }
-            if (string.IsNullOrWhiteSpace(colaborador.Telefone) || colaborador.Telefone.Length != 11)
+            if (string.IsNullOrWhiteSpace(aluno.Telefone) || aluno.Telefone.Length != 11)
             {
                 Shell.Current.DisplayAlert(validationTitle, "Telefone deve ter 11 dígitos.", "OK");
                 return false;
             }
-            if (colaborador.Endereco == null)
+            if (aluno.Endereco == null)
             {
                 Shell.Current.DisplayAlert(validationTitle, "Endereço é obrigatório.", "OK");
                 return false;
             }
-            if (string.IsNullOrWhiteSpace(colaborador.Numero))
+            if (string.IsNullOrWhiteSpace(aluno.Numero))
             {
                 Shell.Current.DisplayAlert(validationTitle, "Número é obrigatório.", "OK");
                 return false;
             }
-            if (colaborador.DataAdmissao == default)
-            {
-                Shell.Current.DisplayAlert(validationTitle, "Data de admissão é obrigatória.", "OK");
-                return false;
-            }
             return true;
         }
-
 
     }
 }
