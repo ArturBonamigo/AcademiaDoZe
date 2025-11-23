@@ -1,19 +1,48 @@
 ﻿using AcademiaDoZe.Application.DTOs;
 using AcademiaDoZe.Application.Interfaces;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.ComponentModel; // Adicionar para QueryProperty e ObservableObject
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.Json; // Importado para serialização JSON
 
 namespace AcademiaDoZe.Presentation.AppMaui.ViewModels
 {
+    // 🆕 CORREÇÃO: Usar uma propriedade string para receber o valor da URL
+    [QueryProperty(nameof(IsSelectingQuery), "selecting")]
     public partial class AlunoListViewModel : BaseViewModel
     {
         public ObservableCollection<string> FilterTypes { get; } = new() { "Id", "CPF" };
         private readonly IAlunoService _alunoService;
+
+        // 1. Campo privado booleano que armazena o estado de seleção
+        private bool _isSelecting = false;
+
+        // 2. Propriedade pública para a lógica da View (leitura)
+        public bool IsSelecting
+        {
+            get => _isSelecting;
+        }
+
+        // 3. Propriedade STRING que recebe o valor da URL via [QueryProperty]
+        public string IsSelectingQuery
+        {
+            // O set é chamado pelo QueryProperty
+            set
+            {
+                // Tenta converter a string para bool e atualiza o campo privado
+                if (bool.TryParse(value, out var result))
+                {
+                    // Usa SetProperty para atualizar o campo privado e notificar a UI
+                    SetProperty(ref _isSelecting, result, nameof(IsSelecting));
+                }
+            }
+        }
+
         private string _searchText = string.Empty;
         public string SearchText
         {
@@ -43,6 +72,7 @@ namespace AcademiaDoZe.Presentation.AppMaui.ViewModels
             _alunoService = alunoService;
             Title = "Alunos";
         }
+
         // métodos de comando
         [RelayCommand]
         private async Task AddAlunoAsync()
@@ -56,20 +86,45 @@ namespace AcademiaDoZe.Presentation.AppMaui.ViewModels
                 await Shell.Current.DisplayAlert("Erro", $"Erro ao navegar para tela de cadastro: {ex.Message}", "OK");
             }
         }
+
+        // Lógica condicional para seleção ou edição
         [RelayCommand]
         private async Task EditAlunoAsync(AlunoDTO aluno)
         {
-            try
+            if (aluno == null)
+                return;
+
+            if (_isSelecting) // Usa o campo interno booleano
             {
-                if (aluno == null)
-                    return;
-                await Shell.Current.GoToAsync($"aluno?Id={aluno.Id}");
+                try
+                {
+                    // Serializa o objeto AlunoDTO para uma string JSON
+                    var alunoJson = JsonSerializer.Serialize(aluno);
+
+                    // Navega de volta ("..") para a página anterior (MatriculaViewModel), 
+                    // passando o aluno serializado no parâmetro 'AlunoSelecionado'.
+                    await Shell.Current.GoToAsync($"..?AlunoSelecionado={Uri.EscapeDataString(alunoJson)}");
+                }
+                catch (Exception ex)
+                {
+                    await Shell.Current.DisplayAlert("Erro de Seleção", $"Erro ao serializar aluno: {ex.Message}", "OK");
+                }
             }
-            catch (Exception ex)
+            else // Caso contrário (modo padrão: edição)
             {
-                await Shell.Current.DisplayAlert("Erro", $"Erro ao navegar para tela de edição: {ex.Message}", "OK");
+                try
+                {
+                    await Shell.Current.GoToAsync($"aluno?Id={aluno.Id}");
+                }
+                catch (Exception ex)
+                {
+                    await Shell.Current.DisplayAlert("Erro", $"Erro ao navegar para tela de edição: {ex.Message}", "OK");
+                }
             }
         }
+
+        // ... (resto dos comandos)
+
         [RelayCommand]
         private async Task RefreshAsync()
         {
@@ -92,7 +147,7 @@ namespace AcademiaDoZe.Presentation.AppMaui.ViewModels
                     Alunos.Clear();
                 });
                 IEnumerable<AlunoDTO> resultados = Enumerable.Empty<AlunoDTO>();
-                // Busca os colaboradores de acordo com o filtro
+                // Busca os alunos de acordo com o filtro
                 if (string.IsNullOrWhiteSpace(SearchText))
 
                 {

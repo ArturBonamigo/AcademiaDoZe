@@ -23,6 +23,9 @@ Title="Academia do Zé">
     <FlyoutItem Title="Alunos">
         <ShellContent ContentTemplate="{DataTemplate views:AlunoListPage}" Route="alunos" />
     </FlyoutItem>
+    <FlyoutItem Title="Matrícula">
+        <ShellContent ContentTemplate="{DataTemplate views:MatriculaPage}" Route="matrículas"/>
+    </FlyoutItem>
     <FlyoutItem Title="Configurações">
         <ShellContent ContentTemplate="{DataTemplate views:ConfigPage}" Route="configuracoes"/>
     </FlyoutItem>

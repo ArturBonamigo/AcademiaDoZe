@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="AcademiaDoZe.Presentation.AppMaui.Views.MatriculaPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Editar Matrícula">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Button Text="Selecionar Aluno" Command="{Binding SelectAlunoCommand}" />
+
+            <Frame HasShadow="False" Padding="8" CornerRadius="8">
+                <HorizontalStackLayout Spacing="12">
+                    <Image Source="{Binding Aluno.Foto.Conteudo, Converter={StaticResource ByteArrayToImageConverter}}" WidthRequest="64" HeightRequest="64" Aspect="AspectFill"/>
+                    <VerticalStackLayout>
+                        <Label Text="{Binding Aluno.Nome}" FontAttributes="Bold"/>
+                        <Label Text="{Binding Aluno.Cpf}" FontSize="12"/>
+                        <Label Text="{Binding Aluno.DataNascimento, StringFormat='Nascimento: {0:dd/MM/yyyy}'}" FontSize="12"/>
+                    </VerticalStackLayout>
+                </HorizontalStackLayout>
+            </Frame>
+
+            <Label Text="Plano"/>
+            <Picker ItemsSource="{Binding Planos}" SelectedItem="{Binding Matricula.Plano}" />
+
+            <HorizontalStackLayout>
+                <VerticalStackLayout>
+                    <Label Text="Início"/>
+                    <DatePicker Date="{Binding DataInicioDate, Mode=TwoWay}" />
+                </VerticalStackLayout>
+                <VerticalStackLayout>
+                    <Label Text="Fim"/>
+                    <DatePicker Date="{Binding DataFimDate, Mode=TwoWay}" />
+                </VerticalStackLayout>
+            </HorizontalStackLayout>
+
+            <Label Text="Objetivo"/>
+            <Editor Text="{Binding Objetivo}" AutoSize="TextChanges" HeightRequest="80"/>
+
+            <Label Text="Restrições Médicas"/>
+            <CollectionView ItemsSource="{Binding RestricoesOptions}" SelectionMode="None" HeightRequest="200">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <HorizontalStackLayout Padding="6">
+                            <CheckBox IsChecked="{Binding IsChecked}" VerticalOptions="Center"/>
+                            <Label Text="{Binding Name}" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Label Text="Observações"/>
+            <Editor Text="{Binding Observacoes}" HeightRequest="80"/>
+
+            <Label Text="Laudo Médico"/>
+            <HorizontalStackLayout Spacing="8">
+                <Image Source="{Binding Laudo.Conteudo, Converter={StaticResource ByteArrayToImageConverter}}" WidthRequest="80" HeightRequest="80" Aspect="AspectFill"/>
+                <Button Text="Selecionar Laudo" Command="{Binding PickLaudoCommand}"/>
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                <Button Text="Cancelar" Command="{Binding CancelCommand}" />
+                <Button Text="Excluir" Command="{Binding DeleteCommand}" />
+                <Button Text="Salvar" Command="{Binding SaveCommand}" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
